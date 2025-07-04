@@ -1,6 +1,6 @@
 {
   "name": "timetracking-app",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Portable Time Tracking Application",
   "main": "main.js",
   "scripts": {
