@@ -25,7 +25,8 @@ jobs:
       
     - name: Build applications
       run: |
-        npm run build-both
+        npx electron-builder --win nsis --publish never
+        npx electron-builder --win portable --publish never
         
     - name: List build outputs
       run: |
