@@ -1,0 +1,96 @@
+{
+  "name": "timetracking-app",
+  "version": "1.0.0",
+  "description": "Portable Time Tracking Application",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "build-win": "node build-scripts/build-win.js",
+    "build-portable": "node build-scripts/build-portable.js",
+    "build-both": "npm run build-win && npm run build-portable",
+    "build-installer-direct": "npx electron-builder --win nsis",
+    "build-portable-direct": "npx electron-builder --win portable",
+    "dist": "npm run build-portable"
+  },
+  "author": "Maximilian Volk",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.2.2",
+    "electron-updater": "^6.6.2"
+  },
+  "build": {
+    "appId": "com.trumpf.timetracking",
+    "productName": "Time Tracking",
+    "compression": "store",
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/better-sqlite3/**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "main.js",
+      "preload.js",
+      "package.json",
+      "!src/**/*.map",
+      "!**/*.md",
+      "!**/LICENSE*",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*.d.ts",
+      "!**/node_modules/.bin",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+      "!**/{appveyor.yml,.travis.yml,circle.yml}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "requestedExecutionLevel": "asInvoker",
+      "publisherName": "Maximilian Volk"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Time Tracking",
+      "menuCategory": "Productivity",
+      "displayLanguageSelector": false,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "TimeTracking-Setup.exe"
+    },
+    "portable": {
+      "artifactName": "TimeTracking-Portable.exe"
+    }
+  }
+}
