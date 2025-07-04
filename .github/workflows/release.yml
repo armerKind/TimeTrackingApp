@@ -1,0 +1,87 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Triggers on version tags like v1.0.0, v1.2.3, etc.
+  workflow_dispatch: # Allows manual triggering from GitHub UI
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build applications
+      run: |
+        npm run build-both
+        
+    - name: List build outputs
+      run: |
+        echo "Contents of dist folder:"
+        dir dist
+        
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: timetracking-builds
+        path: |
+          dist/*.exe
+          dist/*.yml
+        retention-days: 30
+        
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/TimeTracking-Setup.exe
+          dist/TimeTracking-Portable.exe
+          dist/latest.yml
+        body: |
+          ## 🎉 Time Tracking App Release ${{ github.ref_name }}
+          
+          ### 📥 Downloads
+          
+          **Windows Installer (Recommended)**
+          - `TimeTracking-Setup.exe` - Fast startup, includes desktop shortcut and start menu entry
+          
+          **Portable Version**
+          - `TimeTracking-Portable.exe` - No installation required, can run from USB drive
+          
+          ### ⚡ Features
+          - Global keyboard shortcuts (Ctrl+1-9)
+          - Bulletproof timer that works through screen locks
+          - Smart project management with soft delete
+          - Weekly overview and CSV export
+          - Auto-save functionality
+          
+          ### 🚀 Getting Started
+          1. Download the installer or portable version
+          2. Run the application
+          3. Create your first project in the Projects tab
+          4. Start tracking time with Ctrl+1-9 shortcuts!
+          
+          ### 📊 Data Storage
+          - Database location: `Documents/TimeTracking/timetracking.db`
+          - Easily portable and backup-friendly
+          
+          ---
+          
+          *Built with Electron and vibe-coded with Claude AI assistance* 🤖
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

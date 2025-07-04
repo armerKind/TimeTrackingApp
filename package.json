@@ -12,7 +12,11 @@
     "build-both": "npm run build-win && npm run build-portable",
     "build-installer-direct": "npx electron-builder --win nsis",
     "build-portable-direct": "npx electron-builder --win portable",
-    "dist": "npm run build-portable"
+    "dist": "npm run build-portable",
+    "release": "node release.js",
+    "release:patch": "node release.js patch",
+    "release:minor": "node release.js minor",
+    "release:major": "node release.js major"
   },
   "author": "Maximilian Volk",
   "license": "MIT",

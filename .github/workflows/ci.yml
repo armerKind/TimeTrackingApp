@@ -1,0 +1,51 @@
+name: CI Build Test
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Test portable build
+      run: npm run build-portable
+      
+    - name: Test installer build  
+      run: npm run build-win
+      
+    - name: Verify build outputs
+      run: |
+        if (Test-Path "dist/TimeTracking-Portable.exe") {
+          Write-Host "✅ Portable build successful"
+          $portable = Get-Item "dist/TimeTracking-Portable.exe"
+          Write-Host "📦 Portable size: $([math]::Round($portable.Length/1MB, 2)) MB"
+        } else {
+          Write-Host "❌ Portable build failed"
+          exit 1
+        }
+        
+        if (Test-Path "dist/TimeTracking-Setup.exe") {
+          Write-Host "✅ Installer build successful"
+          $installer = Get-Item "dist/TimeTracking-Setup.exe"
+          Write-Host "📦 Installer size: $([math]::Round($installer.Length/1MB, 2)) MB"
+        } else {
+          Write-Host "❌ Installer build failed"
+          exit 1
+        }
+      shell: powershell
