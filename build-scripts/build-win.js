@@ -139,7 +139,7 @@ async function buildInstaller() {
   // Build installer
   console.log('🔨 Building Windows installer (NSIS)...');
   console.log('   This creates a fast-loading Windows app');
-  if (!runCommand('npx electron-builder --win nsis', 'Building installer')) {
+  if (!runCommand('npx electron-builder --win nsis --publish never', 'Building installer')) {
     console.log('');
     console.log('💡 If build failed, try:');
     console.log('   npm install electron-builder --save-dev');

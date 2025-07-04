@@ -1,6 +1,6 @@
 {
   "name": "timetracking-app",
-  "version": "1.2.1",
+  "version": "1.0.0",
   "description": "Portable Time Tracking Application",
   "main": "main.js",
   "scripts": {
@@ -10,8 +10,8 @@
     "build-win": "node build-scripts/build-win.js",
     "build-portable": "node build-scripts/build-portable.js",
     "build-both": "npm run build-win && npm run build-portable",
-    "build-installer-direct": "npx electron-builder --win nsis",
-    "build-portable-direct": "npx electron-builder --win portable",
+    "build-installer-direct": "npx electron-builder --win nsis --publish never",
+    "build-portable-direct": "npx electron-builder --win portable --publish never",
     "dist": "npm run build-portable",
     "release": "node release.js",
     "release:patch": "node release.js patch",
@@ -36,6 +36,10 @@
     "asarUnpack": [
       "**/node_modules/better-sqlite3/**/*"
     ],
+    "publish": {
+      "provider": "github",
+      "publishAutoUpdate": false
+    },
     "directories": {
       "output": "dist"
     },

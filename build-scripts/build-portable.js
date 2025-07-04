@@ -173,7 +173,7 @@ async function buildApp() {
   // Step 7: Build the portable executable
   console.log('🔨 Building portable executable...');
   console.log('   Note: Portable apps have slower startup due to extraction');
-  if (!runCommand('npx electron-builder --win portable', 'Building portable app')) {
+  if (!runCommand('npx electron-builder --win portable --publish never', 'Building portable app')) {
     console.log('');
     console.log('💡 Build failed. Try these troubleshooting steps:');
     console.log('   1. Make sure you\'re on Windows or have Windows build tools installed');
