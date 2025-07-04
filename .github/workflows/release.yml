@@ -6,6 +6,10 @@ on:
       - 'v*' # Triggers on version tags like v1.0.0, v1.2.3, etc.
   workflow_dispatch: # Allows manual triggering from GitHub UI
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -23,23 +27,84 @@ jobs:
     - name: Install dependencies
       run: npm ci
       
-    - name: Build applications
+    - name: Debug - Check files before build
       run: |
-        npx electron-builder --win nsis --publish never
-        npx electron-builder --win portable --publish never
+        echo "=== Current directory ==="
+        pwd
+        echo "=== Project files ==="
+        dir
+        echo "=== Package.json exists? ==="
+        if (Test-Path "package.json") { echo "✅ package.json found" } else { echo "❌ package.json missing" }
+        echo "=== Main.js exists? ==="
+        if (Test-Path "main.js") { echo "✅ main.js found" } else { echo "❌ main.js missing" }
+        echo "=== Preload.js exists? ==="
+        if (Test-Path "preload.js") { echo "✅ preload.js found" } else { echo "❌ preload.js missing" }
+        echo "=== Src folder exists? ==="
+        if (Test-Path "src") { echo "✅ src folder found"; dir src } else { echo "❌ src folder missing" }
+        echo "=== Assets folder exists? ==="
+        if (Test-Path "assets") { echo "✅ assets folder found"; dir assets } else { echo "❌ assets folder missing" }
+      shell: powershell
         
-    - name: List build outputs
+    - name: Build Windows Installer
       run: |
-        echo "Contents of dist folder:"
-        dir dist
+        echo "Building Windows installer..."
+        npx electron-builder --win nsis --publish never --config.directories.output=dist
+      continue-on-error: true
+      
+    - name: Build Portable Version
+      run: |
+        echo "Building portable version..."
+        npx electron-builder --win portable --publish never --config.directories.output=dist
+      continue-on-error: true
         
-    - name: Upload Build Artifacts
+    - name: Debug - Check build results
+      run: |
+        echo "=== Current directory after build ==="
+        pwd
+        echo "=== All folders ==="
+        dir
+        echo "=== Dist folder exists? ==="
+        if (Test-Path "dist") {
+          echo "✅ Dist folder found"
+          echo "=== Dist folder contents (recursive) ==="
+          Get-ChildItem -Path dist -Recurse | ForEach-Object {
+            if ($_.PSIsContainer) {
+              Write-Host "📁 $($_.FullName)" -ForegroundColor Blue
+            } else {
+              Write-Host "📄 $($_.FullName) ($([math]::Round($_.Length/1MB, 2)) MB)" -ForegroundColor Green
+            }
+          }
+          
+          echo "=== Looking specifically for .exe files ==="
+          $exeFiles = Get-ChildItem -Path dist -Recurse -Filter "*.exe"
+          if ($exeFiles) {
+            $exeFiles | ForEach-Object { Write-Host "🎯 Found: $($_.FullName)" -ForegroundColor Yellow }
+          } else {
+            echo "❌ No .exe files found anywhere in dist"
+          }
+          
+          echo "=== Looking for .yml files ==="
+          $ymlFiles = Get-ChildItem -Path dist -Recurse -Filter "*.yml"
+          if ($ymlFiles) {
+            $ymlFiles | ForEach-Object { Write-Host "📋 Found: $($_.FullName)" -ForegroundColor Cyan }
+          } else {
+            echo "❌ No .yml files found"
+          }
+        } else {
+          echo "❌ No dist folder found!"
+          echo "=== Let's check for alternative locations ==="
+          dir -Recurse | Where-Object {$_.Name -like "*.exe"}
+        }
+      shell: powershell
+        
+    - name: Upload Build Artifacts (All Files)
       uses: actions/upload-artifact@v4
       with:
-        name: timetracking-builds
+        name: timetracking-build-debug
         path: |
-          dist/*.exe
-          dist/*.yml
+          dist/
+          **/*.exe
+          **/*.yml
         retention-days: 30
         
     - name: Create Release
@@ -47,9 +112,8 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: |
-          dist/TimeTracking-Setup.exe
-          dist/TimeTracking-Portable.exe
-          dist/latest.yml
+          dist/**/*.exe
+          dist/**/*.yml
         body: |
           ## 🎉 Time Tracking App Release ${{ github.ref_name }}
           
@@ -84,5 +148,6 @@ jobs:
         draft: false
         prerelease: false
         generate_release_notes: true
+        fail_on_unmatched_files: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
